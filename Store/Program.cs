@@ -15,7 +15,7 @@ namespace Store
         }
     }
 
-    public class GeneralMenu // новое
+    public class GeneralMenu // новое kfkfkfkfkfkfkfkf
     {
         public UserBase UserBase;
 
