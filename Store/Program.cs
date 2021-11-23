@@ -10,12 +10,12 @@ namespace Store
         static void Main(string[] args)
         {
             var userBase = new UserBase();
-            var generalMenu = new GeneralMenu(userBase); //новое
-            generalMenu.Menu(); //новое
+            var generalMenu = new GeneralMenu(userBase); 
+            generalMenu.Menu(); 
         }
     }
 
-    public class GeneralMenu // новое 1231234567
+    public class GeneralMenu  
     {
         public UserBase UserBase;
 
@@ -32,7 +32,7 @@ namespace Store
             SelectOperation(UserBase);
 
         }
-        public virtual void SelectOperation(UserBase baseOfUsers) //заменил static на virtual для переопределение в классах наследниках
+        private void SelectOperation(UserBase baseOfUsers) 
         {
             var firstChoice = new Dictionary<int, string>()
             {
@@ -47,20 +47,18 @@ namespace Store
             }
 
             var numberOfRequest = GetSelectedMenuItem();
-            
+
             switch (numberOfRequest)
             {
                 case 1:
-                    baseOfUsers.LogIn(); 
-                    // нужно сделать переход в AdminMenu или UserMenu в зависимости от введенных данных
-                    //string role = UserBase.UserRole();
-                    AdminMenu adminMenu = new AdminMenu(UserBase); //временно вызываем AdminMenu сразу
-                    adminMenu.Menu();
+                    var user = baseOfUsers.LogIn();
+                    var menu = GetMenu(user);
+                    menu.Menu();
                     break;
+                    
                 case 2:
                     baseOfUsers.CreateAccount();
-                    baseOfUsers.LogIn(); 
-                    //как тут перейти в AdminMenU или UserMenu?
+                    Menu();
                     break;
                 case 3:
                     Console.WriteLine("*** До свидания! ***");
@@ -68,7 +66,24 @@ namespace Store
             }
             
         }
-        public virtual int GetSelectedMenuItem() //заменил private static на public virtual для переопределение в классах наследниках
+
+        private GeneralMenu GetMenu(User user)
+        {
+            GeneralMenu menu = new GeneralMenu(UserBase);
+            switch (user.Role)
+            {
+                case Role.Admin:
+                    menu = new AdminMenu(UserBase);
+                    break;
+                case Role.UsualUser:
+                    menu = new UserMenu(UserBase);
+                    break;
+            }
+
+            return menu;
+        }
+
+        private int GetSelectedMenuItem() //заменил private static на public virtual для переопределение в классах наследниках
         {
             var consoleKey = Console.ReadLine();
             Console.WriteLine();
@@ -103,7 +118,7 @@ namespace Store
             SelectOperation(UserBase);
         }
 
-        public override void SelectOperation(UserBase baseOfUsers)
+        private void SelectOperation(UserBase baseOfUsers)
         {
             var userChoice = new Dictionary<int, string>()
             {
@@ -142,12 +157,12 @@ namespace Store
                     break;
                 case 6:
                     Console.WriteLine("*** До свидания! ***");
-                    base.Menu(); //вызывается AdminMenu.Menu, как вызвать GeneralMenu.Menu???
+                    base.Menu(); 
                     break;
             }
         }
 
-        public override int GetSelectedMenuItem()
+        private int GetSelectedMenuItem()
         {
             var choice = Console.ReadLine();
             Console.WriteLine();
@@ -189,7 +204,7 @@ namespace Store
         public UserBase()
         {
             Users = new List<User>();
-            Users.Add(new User("Admin", "123", "Admin")); //добавил роль
+            Users.Add(new User("Admin", "123", Role.Admin)); //добавил роль
             Users.Add(new User("Max", "123")); //тут роли по умолчанию есть
             Users.Add(new User("Ted", "123"));
             Users.Add(new User("Ann", "123"));
@@ -225,7 +240,7 @@ namespace Store
             Console.WriteLine();
         }
 
-        public void LogIn() // для того чтобы в зависимости от роли показывать AdminMenu или UserMenu - нужно возвращать string с ролью
+        public User LogIn() // СМОТРИ ГИТ 
         {
             Console.Write("Введите логин: ");
             var login = Console.ReadLine();
@@ -235,24 +250,28 @@ namespace Store
             {
                 Console.Write("Введите пароль: ");
                 var password = Console.ReadLine();
-                if (CheckPassword(password, login));
+                User user = null;
+                if (CheckPassword(password, login, ref user))
                 {
                     Console.WriteLine();
                     Console.WriteLine($"Здравствуте, {login}");
                     Console.WriteLine();
+                    return user;
                 }
-                // Нужна проверка пароля, но так не дает сделать:
-                //else
-                //{
-                //    Console.WriteLine("Неправильный пароль");
-                //    LogIn();
-                //}
+
+                else
+                {
+                    Console.WriteLine("Неправильный пароль");
+                    LogIn();
+                }
             }
             else
             {
                 Console.WriteLine("Пользователя с таким логином не найдено");
                 LogIn();
             }
+
+            return null;
         }
 
         private bool CheckLogin(string login)
@@ -266,36 +285,25 @@ namespace Store
             }
             return false;
         }
-        private bool CheckPassword(string password, string login) //написал метод
+        private bool CheckPassword(string password, string login, ref User selectedUser) 
         {
-            int indexOfUserWithChoosedLogin = -1;
+            int index = -1;
 
             foreach (var user in Users)
             {
-                indexOfUserWithChoosedLogin++;
+                index++;
                 if (login == user.Login)
                 {
                     break;
                 }
             }
 
-            if (Users[indexOfUserWithChoosedLogin].Password == password)
+            if (Users[index].Password == password)
             {
+                selectedUser = Users[index];
                 return true;
             }
             return false;
-        }
-
-        public string UserRole(User user) // метод возвращающий роль
-        {
-            if (user.Role == "Admin")
-            {
-                return "Admin";
-            }
-            else
-            {
-                return "UsualUser";
-            }
         }
         
     }
@@ -304,11 +312,11 @@ namespace Store
     {
         public string Login { get; }
         public string Password { get; }
-        public string Role { get; } // добавил роль
+        public Role Role { get; } // добавил роль
         public List<Product> Basket { get; }
 
 
-        public User(string login, string password, string role = "UsualUser") // добавил роль по умолчанию
+        public User(string login, string password, Role role = Role.UsualUser) 
         {
             Login = login;
             Password = password;
@@ -322,6 +330,12 @@ namespace Store
         }
     }
 
+    public enum Role
+    {
+        Admin, 
+        UsualUser
+    } 
+    
     public class Product 
     {
         public string Name { get; }
