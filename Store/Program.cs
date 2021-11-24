@@ -50,17 +50,17 @@ namespace Store
 
             switch (numberOfRequest)
             {
-                case 1:
+                case "LogIn": 
                     var user = baseOfUsers.LogIn();
                     var menu = GetMenu(user);
                     menu.Menu();
                     break;
                     
-                case 2:
+                case "Registration":
                     baseOfUsers.CreateAccount();
                     Menu();
                     break;
-                case 3:
+                case "Exit":
                     Console.WriteLine("*** До свидания! ***");
                     break;
             }
@@ -83,28 +83,37 @@ namespace Store
             return menu;
         }
 
-        private int GetSelectedMenuItem() //заменил private static на public virtual для переопределение в классах наследниках
+        private string GetSelectedMenuItem()  
         {
-            var consoleKey = Console.ReadLine();
+            var consoleKey = Convert.ToInt32(Console.ReadLine());
             Console.WriteLine();
-            switch (consoleKey)
+            var myEnumMemberCount = Enum.GetNames(typeof(GeneralMenuCases)).Length;
+            
+            if (consoleKey > 0 && consoleKey <= myEnumMemberCount) // Можно использовать default
             {
-                case "1":
-                    return 1;
-                case "2":
-                    return 2;
-                case "3":
-                    return 3;
-                default:
-                    Console.WriteLine("*** Ошибка ввода данных ***");
-                    Console.WriteLine("Выберите один из предложенных выше вариантов ответа");
-                    return GetSelectedMenuItem(); //добавил эту строку чтобы можно было снова ввести данные
+                return Enum.GetName(typeof(GeneralMenuCases), consoleKey);
+            }
+            else
+            {
+                Console.WriteLine("*** Ошибка ввода данных ***");
+                Console.WriteLine("Выберите один из предложенных выше вариантов ответа");
+                return GetSelectedMenuItem(); 
             }
         }
         
+        
     }
+
+    public enum GeneralMenuCases
+    {
+        LogIn = 1,
+        Registration, 
+        Exit
+    }
+
     
-    public class AdminMenu : GeneralMenu //новое 
+    
+    public class AdminMenu : GeneralMenu 
     {
         
         public AdminMenu(UserBase userBase) : base(userBase)
@@ -189,7 +198,7 @@ namespace Store
         }
     }
 
-    public class UserMenu : GeneralMenu //новое
+    public class UserMenu : GeneralMenu 
     {
         public UserMenu(UserBase userBase) : base(userBase)
         {
@@ -240,13 +249,13 @@ namespace Store
             Console.WriteLine();
         }
 
-        public User LogIn() // СМОТРИ ГИТ 
+        public User LogIn() // //если ввести неправильный логин или пароль, а потом правильный - выдает ошибку
         {
             Console.Write("Введите логин: ");
             var login = Console.ReadLine();
             CheckLogin(login);
             
-            if (CheckLogin(login)) //сделал по новому.
+            if (CheckLogin(login)) 
             {
                 Console.Write("Введите пароль: ");
                 var password = Console.ReadLine();
@@ -312,7 +321,7 @@ namespace Store
     {
         public string Login { get; }
         public string Password { get; }
-        public Role Role { get; } // добавил роль
+        public Role Role { get; } 
         public List<Product> Basket { get; }
 
 
@@ -334,7 +343,8 @@ namespace Store
     {
         Admin, 
         UsualUser
-    } 
+    }
+    
     
     public class Product 
     {
